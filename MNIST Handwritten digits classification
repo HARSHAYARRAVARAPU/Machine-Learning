@@ -1,0 +1,161 @@
+
+# coding: utf-8
+
+# In[407]:
+
+
+#MNIST Handwritten digits is classic dataset for classification task
+#Here we are applying various Machine learning models to classify the digits
+#
+#import packages
+import sklearn
+import numpy
+import matplotlib.pyplot as plt
+import pandas
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import StratifiedKFold
+
+
+# In[416]:
+
+
+#Loading the digits dataset
+from sklearn.datasets import load_digits
+df = load_digits()
+
+
+# In[417]:
+
+
+df.images[0]
+
+
+# In[418]:
+
+
+#Representation of the digit on gray scale
+plt.gray()
+plt.matshow(df.images[0])
+plt.show()
+
+
+# In[419]:
+
+
+#Taking out the features and targests from the dataset
+X= df.data
+y = df.target
+
+
+# In[420]:
+
+
+print(X[67]) , print((y[67]))
+
+
+# In[421]:
+
+
+#Applying train_test_split on the data set
+#Uncomment the following lines if u don't want to apply StratifiedKFold 
+#from sklearn.model_selection import train_test_split
+#X_train , X_test, y_train, y_test = train_test_split(X,y, test_size =0.2, random_state=42)
+
+
+# In[422]:
+
+
+#Train and test shapes which are divided in 80:20 ratio
+#print(X_train.shape, X_test.shape)
+#y_train ,y_test  = y_train.ravel(), y_test.ravel()
+#print((y_train.shape), (y_test.shape))
+
+
+# In[423]:
+
+
+#Machine learning models with the hyperparameters tuned 
+lr = LogisticRegression(C=1.0, max_iter = 200, multi_class ='auto', solver ='liblinear')
+svm = SVC(C= 1.2 , gamma ='auto')
+rf = RandomForestClassifier(n_estimators = 25, criterion = 'gini')
+
+
+# In[427]:
+
+
+#Fitting the model function
+def model_fit(model, X, Y, x_test, y_test):
+    #Scaling the data as svm will prone to less
+    #accuracy if not done
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+    x_test = scaler.transform(x_test)
+    
+    #Fitting the model
+    model = model.fit(X,Y)
+    Y_pred = model.predict(x_test)
+    print(accuracy_score(y_test , Y_pred))
+    print(confusion_matrix(y_test , Y_pred))
+    return model, Y_pred
+
+
+# In[443]:
+
+
+#Applying the StratifiedKFold on the data set so it gives better accuracy and consistent results 
+#than train_test_split
+skf = StratifiedKFold(n_splits =10, random_state =42)
+for train_index, test_index in skf.split(X,y):
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+    
+print("\nAccuracy and Confusion matrix for Logistic Regression")    
+lr , lr_pred = model_fit(lr, X_train, y_train, X_test, y_test)
+print("\nAccuracy and Confusion matrix for SVM")   
+svm , svm_pred = model_fit(svm, X_train, y_train, X_test, y_test)
+print("\nAccuracy and Confusion matrix for Random Forest")   
+rf , rf_pred= model_fit(rf, X_train, y_train, X_test, y_test)
+
+
+# In[448]:
+
+
+#Writing the Predicted and actual results into a csv file
+import pandas as pd
+new_data_frame = pd.DataFrame(lr_pred, y_test, columns =['Actual'])
+new_data_frame.to_csv(r"C:\Users\yarravarapu.p\Desktop\all_models.csv")
+
+
+# In[455]:
+
+
+#Saving the model using Joblib we can also use pickle, json
+from sklearn.externals import joblib
+joblib_file = "joblib_model.pkl"
+#Dumping the model
+joblib.dump(rf, joblib_file)
+
+
+# In[456]:
+
+
+#Loading the model
+model = joblib.load(r"C:\Users\yarravarapu.p\joblib_model.pkl")
+model
+
+
+# In[457]:
+
+
+#Predicting the model on test data
+scaler = StandardScaler()
+X_test = scaler.fit_transform(X_test)
+pred = model.predict(X_test)
+print(accuracy_score(y_test, pred))
+#print(accuracy_score(X_train, y_train))
+
