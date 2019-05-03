@@ -4,3 +4,6 @@ The folder consists of application of Machine Learning models on various data se
 Models used in this repository are:
 
 1.Linear Regression
+2.Logistic Regression
+3.SVM
+4.Random Forests.
